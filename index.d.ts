@@ -1,3 +1,5 @@
+import { IdentifierBase } from "semver/functions/inc";
+
 declare interface AggregateError extends Error {
   errors: any[];
 }
@@ -41,6 +43,11 @@ declare module "semantic-release" {
      * Has error, log, warn and success methods.
      */
     logger: Signale<"error" | "log" | "success" | "warn">;
+
+    /**
+     * Version from package.json
+     */
+    packageVersion: string;
 
     /**
      * Semantic release configuration
@@ -677,6 +684,18 @@ declare module "semantic-release" {
      * Set to true when the `ci` option is set to false.
      */
     noCi?: true;
+
+    /** Whether to start from the version in package.json */
+    respectPackageJsonVersion: boolean;
+
+    /** The first release version if respectPackageJsonVersion is false. */
+    firstRelease: string;
+
+    /** Whether to start prerelease on 0 or 1 */
+    prereleaseIdentifierBase: IdentifierBase;
+
+    /** Whether to publish on PR */
+    publishOnPr: boolean;
 
     /**
      * Any other options supported by plugins.

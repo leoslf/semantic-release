@@ -271,8 +271,9 @@ export default async (cliOptions = {}, { cwd = process.cwd(), env = process.env,
   context.logger = getLogger(context);
   context.logger.log(`Running ${pkg.name} version ${pkg.version}`);
   try {
-    const { plugins, options } = await getConfig(context, cliOptions);
+    const { packageVersion, plugins, options } = await getConfig(context, cliOptions);
     options.originalRepositoryURL = options.repositoryUrl;
+    context.packageVersion = packageVersion;
     context.options = options;
     try {
       const result = await run(context, plugins);

@@ -5,7 +5,13 @@ import { spy, stub } from "sinon";
 import { WritableStreamBuffer } from "stream-buffers";
 import AggregateError from "aggregate-error";
 import SemanticReleaseError from "@semantic-release/error";
-import { COMMIT_EMAIL, COMMIT_NAME, SECRET_REPLACEMENT } from "../lib/definitions/constants.js";
+import {
+  COMMIT_EMAIL,
+  COMMIT_NAME,
+  DEFAULT_FIRST_RELEASE,
+  DEFAULT_PRERELEASE_IDENTIFIER_BASE,
+  SECRET_REPLACEMENT,
+} from "../lib/definitions/constants.js";
 import {
   gitAddNote,
   gitCheckout,
@@ -23,6 +29,13 @@ import {
   rebase,
 } from "./helpers/git-utils.js";
 import pluginNoop from "./fixtures/plugin-noop.cjs";
+
+const DEFAULT_CONFIG = {
+  firstRelease: DEFAULT_FIRST_RELEASE,
+  prereleaseIdentifierBase: DEFAULT_PRERELEASE_IDENTIFIER_BASE,
+  publishOnPr: false,
+  respectPackageJsonVersion: false,
+};
 
 test.beforeEach((t) => {
   // Stub the logger functions
@@ -90,6 +103,7 @@ test.serial("Plugins are called with expected values", async (t) => {
   const success = stub().resolves();
   const env = {};
   const config = {
+    ...DEFAULT_CONFIG,
     branches: [{ name: "master" }, { name: "next" }],
     repositoryUrl,
     originalRepositoryURL: repositoryUrl,
@@ -903,6 +917,7 @@ test.serial('Call all "success" plugins even if one errors out', async (t) => {
   const success1 = stub().rejects();
   const success2 = stub().resolves();
   const config = {
+    ...DEFAULT_CONFIG,
     branches: [{ name: "master" }],
     repositoryUrl,
     globalOpt: "global",
@@ -953,6 +968,7 @@ test.serial('Log all "verifyConditions" errors', async (t) => {
   const error3 = new SemanticReleaseError("error 3", "ERR3");
   const fail = stub().resolves();
   const config = {
+    ...DEFAULT_CONFIG,
     branches: [{ name: "master" }],
     repositoryUrl,
     originalRepositoryURL: repositoryUrl,
@@ -1007,7 +1023,12 @@ test.serial('Log all "verifyRelease" errors', async (t) => {
   const error1 = new SemanticReleaseError("error 1", "ERR1");
   const error2 = new SemanticReleaseError("error 2", "ERR2");
   const fail = stub().resolves();
-  const config = { branches: [{ name: "master" }], repositoryUrl, tagFormat: `v\${version}` };
+  const config = {
+    ...DEFAULT_CONFIG,
+    branches: [{ name: "master" }],
+    repositoryUrl,
+    tagFormat: `v\${version}`,
+  };
   const options = {
     ...config,
     verifyConditions: stub().resolves(),

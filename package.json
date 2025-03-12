@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@types/node": "22.13.10",
+    "@types/semver": "^7.3.13",
     "@types/signale": "1.4.7",
     "ava": "6.2.0",
     "c8": "10.1.3",
