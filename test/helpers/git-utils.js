@@ -84,7 +84,7 @@ export async function initBareRepo(repositoryUrl, branch = "master") {
  * @param {Array<string>} messages Commit messages.
  * @param {Object} [execaOpts] Options to pass to `execa`.
  *
- * @returns {Array<Commit>} The created commits, in reverse order (to match `git log` order).
+ * @returns {Promise<Array<Commit>>} The created commits, in reverse order (to match `git log` order).
  */
 export async function gitCommits(messages, execaOptions) {
   await pEachSeries(
@@ -127,9 +127,9 @@ export async function gitGetCommits(from, execaOptions) {
 /**
  * Checkout a branch on the current git repository.
  *
- * @param {String} branch Branch name.
- * @param {Boolean} create to create the branch, `false` to checkout an existing branch.
- * @param {Object} [execaOpts] Options to pass to `execa`.
+ * @param {string} branch Branch name.
+ * @param {boolean} create to create the branch, `false` to checkout an existing branch.
+ * @param {ExecaOptions} [execaOpts] Options to pass to `execa`.
  */
 export async function gitCheckout(branch, create, execaOptions) {
   await execa("git", create ? ["checkout", "-b", branch] : ["checkout", branch], execaOptions);
@@ -139,7 +139,7 @@ export async function gitCheckout(branch, create, execaOptions) {
  * Fetch current git repository.
  *
  * @param {String} repositoryUrl The repository remote URL.
- * @param {Object} [execaOpts] Options to pass to `execa`.
+ * @param {ExecaOptions} [execaOpts] Options to pass to `execa`.
  */
 export async function gitFetch(repositoryUrl, execaOptions) {
   await execa("git", ["fetch", repositoryUrl], execaOptions);
@@ -148,9 +148,9 @@ export async function gitFetch(repositoryUrl, execaOptions) {
 /**
  * Get the HEAD sha.
  *
- * @param {Object} [execaOpts] Options to pass to `execa`.
+ * @param {ExecaOptions} [execaOpts] Options to pass to `execa`.
  *
- * @return {String} The sha of the head commit in the current git repository.
+ * @return {Promise<string>} The sha of the head commit in the current git repository.
  */
 export async function gitHead(execaOptions) {
   return (await execa("git", ["rev-parse", "HEAD"], execaOptions)).stdout;
@@ -171,10 +171,10 @@ export async function gitTagVersion(tagName, sha, execaOptions) {
  * Create a shallow clone of a git repository and change the current working directory to the cloned repository root.
  * The shallow will contain a limited number of commit and no tags.
  *
- * @param {String} repositoryUrl The path of the repository to clone.
- * @param {String} [branch='master'] the branch to clone.
- * @param {Number} [depth=1] The number of commit to clone.
- * @return {String} The path of the cloned repository.
+ * @param {string} repositoryUrl The path of the repository to clone.
+ * @param {string} [branch='master'] the branch to clone.
+ * @param {number} [depth=1] The number of commit to clone.
+ * @returns {Promise<string>} The path of the cloned repository.
  */
 export async function gitShallowClone(repositoryUrl, branch = "master", depth = 1) {
   const cwd = temporaryDirectory();
@@ -227,10 +227,10 @@ export async function gitAddConfig(name, value, execaOptions) {
 /**
  * Get the first commit sha referenced by the tag `tagName` in the local repository.
  *
- * @param {String} tagName Tag name for which to retrieve the commit sha.
- * @param {Object} [execaOpts] Options to pass to `execa`.
+ * @param {string} tagName Tag name for which to retrieve the commit sha.
+ * @param {ExecaOptions} [execaOpts] Options to pass to `execa`.
  *
- * @return {String} The sha of the commit associated with `tagName` on the local repository.
+ * @return {Promise<string>} The sha of the commit associated with `tagName` on the local repository.
  */
 export async function gitTagHead(tagName, execaOptions) {
   return (await execa("git", ["rev-list", "-1", tagName], execaOptions)).stdout;
@@ -239,11 +239,11 @@ export async function gitTagHead(tagName, execaOptions) {
 /**
  * Get the first commit sha referenced by the tag `tagName` in the remote repository.
  *
- * @param {String} repositoryUrl The repository remote URL.
- * @param {String} tagName The tag name to search for.
- * @param {Object} [execaOpts] Options to pass to `execa`.
+ * @param {string} repositoryUrl The repository remote URL.
+ * @param {string} tagName The tag name to search for.
+ * @param {ExecaOptions} [execaOpts] Options to pass to `execa`.
  *
- * @return {String} The sha of the commit associated with `tagName` on the remote repository.
+ * @return {Promise<string>} The sha of the commit associated with `tagName` on the remote repository.
  */
 export async function gitRemoteTagHead(repositoryUrl, tagName, execaOptions) {
   return (await execa("git", ["ls-remote", "--tags", repositoryUrl, tagName], execaOptions)).stdout

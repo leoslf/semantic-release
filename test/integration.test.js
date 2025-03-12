@@ -12,6 +12,7 @@ import {
   DEFAULT_PRERELEASE_IDENTIFIER_BASE,
   SECRET_REPLACEMENT,
 } from "../lib/definitions/constants.js";
+import * as git from "../lib/git.js";
 import {
   gitAddNote,
   gitCheckout,
@@ -1418,7 +1419,7 @@ test.serial(
   }
 );
 
-test.serial("Returns false if triggered by a PR", async (t) => {
+test.serial("Returns false if triggered by a PR but not publishOnPr", async (t) => {
   // Create a git repository, set the current working directory at the root of the repo
   const { cwd, repositoryUrl } = await gitRepo(true);
 
@@ -1428,13 +1429,93 @@ test.serial("Returns false if triggered by a PR", async (t) => {
 
   t.false(
     await semanticRelease(
-      { cwd, repositoryUrl },
+      { cwd, repositoryUrl, publishOnPr: false },
       { cwd, env: {}, stdout: new WritableStreamBuffer(), stderr: new WritableStreamBuffer() }
     )
   );
   t.is(
     t.context.log.args[t.context.log.args.length - 1][0],
     "This run was triggered by a pull request and therefore a new version won't be published."
+  );
+});
+
+test.serial("Returns true if triggered by a PR and publishOnPr", async (t) => {
+  const branches = [
+    "master",
+    {
+      name: "refs/pull/*/merge",
+      prerelease: "preview",
+    },
+  ];
+
+  // Create a git repository, set the current working directory at the root of the repo
+  const { cwd, repositoryUrl } = await gitRepo(true);
+  await gitCommits(["chore: initial commit"], { cwd });
+  await gitPush("origin", "master", { cwd });
+  await gitCheckout("refs/pull/1/merge", true, { cwd });
+  await gitCommits(["feat: scaffolded the universe"], { cwd });
+  await gitPush("origin", "refs/pull/1/merge", { cwd });
+
+  await td.replaceEsm("../lib/get-logger.js", null, () => t.context.logger);
+  await td.replaceEsm("env-ci", null, () => ({
+    isCi: true,
+    branch: "master",
+    prBranch: "refs/pull/1/merge",
+    isPr: true,
+  }));
+
+  await td.replaceEsm(
+    "../lib/git.js",
+    {
+      ...git,
+      getBranches: () => ["master", "refs/pull/1/merge"],
+      getTags: () => ["0.0.0"],
+    },
+    git.default
+  );
+  await td.replaceEsm("@semantic-release/npm", {
+    verifyConditions: async () => {},
+    prepare: async () => {},
+    publish: async () => ({
+      name: "...",
+      url: "...",
+      channel: "...",
+    }),
+    addChannel: async () => ({
+      name: "...",
+      url: "...",
+      channel: "...",
+    }),
+  });
+  await td.replaceEsm("@semantic-release/github", {
+    verifyConditions: async () => {},
+    prepare: async () => {},
+    publish: async () => ({
+      name: "...",
+      url: "...",
+      channel: "...",
+    }),
+    addChannel: async () => ({
+      name: "...",
+      url: "...",
+      channel: "...",
+    }),
+    success: async () => {},
+    fail: async () => {},
+  });
+  await td.replaceEsm("../lib/verify.js", null, async () => {});
+  const semanticRelease = (await import("../index.js")).default;
+
+  t.truthy(
+    await semanticRelease(
+      { cwd, repositoryUrl, branches, publishOnPr: true },
+      {
+        cwd,
+        env: { GH_TOKEN: "fakepassword" },
+        stdout: new WritableStreamBuffer(),
+        stderr: new WritableStreamBuffer(),
+      }
+    )
   );
 });
 
