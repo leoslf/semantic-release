@@ -56,14 +56,9 @@ async function run(context, plugins) {
     });
   }
 
-  if (isCi && isPr) {
-    if (options.publishOnPr) {
-      // whitelist ciBranch
-      options.branches.unshift({ name: ciBranch });
-    } else if (!options.noCi) {
-      logger.log("This run was triggered by a pull request and therefore a new version won't be published.");
-      return false;
-    }
+  if (isCi && isPr && !options.noCi && !options.publishOnPr) {
+    logger.log("This run was triggered by a pull request and therefore a new version won't be published.");
+    return false;
   }
 
   // Verify config
@@ -71,6 +66,11 @@ async function run(context, plugins) {
 
   options.repositoryUrl = await getGitAuthUrl({ ...context, branch: { name: ciBranch } });
   context.branches = await getBranches(options.repositoryUrl, ciBranch, context);
+  for (const branch of context.branches) {
+    if (branch.name === prBranch) {
+      branch.name = ciBranch;
+    }
+  }
   context.branch = context.branches.find(({ name }) => name === ciBranch);
 
   if (!context.branch) {
