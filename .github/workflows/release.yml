@@ -23,7 +23,9 @@ jobs:
         with:
           cache: npm
           node-version: lts/*
-          registry-url: ${{ env.NPM_REGISTRY }}
+          registry-url: ${{ vars.NPM_REGISTRY }}
+          always-auth: true
+
       - run: npm clean-install
       - run: npm install --global corepack@latest
       - run: corepack npm audit signatures
