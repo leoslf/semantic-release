@@ -23,7 +23,7 @@ jobs:
         with:
           cache: npm
           node-version: lts/*
-          registry-url: ${{ vars.NPM_REGISTRY }}
+          scope: "@leoslf"
 
       - run: npm clean-install
       - run: npm install --global corepack@latest
