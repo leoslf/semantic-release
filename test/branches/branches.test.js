@@ -35,8 +35,9 @@ test.serial("Enforce ranges with branching release workflow", async (t) => {
     { name: "beta", prerelease: true, tags: [] },
     { name: "alpha", prerelease: true, tags: [] },
   ];
+  const ciBranch = "master";
   const context = { options: { branches } };
-  td.when(expand(repositoryUrl, context, branches)).thenResolve(remoteBranches);
+  td.when(expand(repositoryUrl, { ciBranch, ...context }, branches)).thenResolve(remoteBranches);
   td.when(getTags(context, remoteBranches)).thenResolve(branches);
 
   let result = (await getBranches(repositoryUrl, "master", context)).map(({ name, range }) => ({ name, range }));
@@ -208,8 +209,9 @@ test.serial("Throw SemanticReleaseError for invalid configurations", async (t) =
     { name: "alpha", prerelease: "alpha", tags: [] },
     { name: "preview", prerelease: "alpha", tags: [] },
   ];
+  const ciBranch = "master";
   const context = { options: { branches } };
-  td.when(expand(repositoryUrl, context, branches)).thenResolve(remoteBranches);
+  td.when(expand(repositoryUrl, { ciBranch, ...context }, branches)).thenResolve(remoteBranches);
   td.when(getTags(context, remoteBranches)).thenResolve(branches);
 
   const error = await t.throwsAsync(getBranches(repositoryUrl, "master", context));
@@ -242,8 +244,9 @@ test.serial("Throw a SemanticReleaseError if there is duplicate branches", async
     { name: "master", tags: [] },
     { name: "master", tags: [] },
   ];
+  const ciBranch = "master";
   const context = { options: { branches } };
-  td.when(expand(repositoryUrl, context, branches)).thenResolve(remoteBranches);
+  td.when(expand(repositoryUrl, { ciBranch, ...context }, branches)).thenResolve(remoteBranches);
   td.when(getTags(context, remoteBranches)).thenResolve(branches);
 
   const errors = [...(await t.throwsAsync(getBranches(repositoryUrl, "master", context))).errors];
@@ -259,9 +262,10 @@ test.serial("Throw a SemanticReleaseError for each invalid branch name", async (
     { name: "~master", tags: [] },
     { name: "^master", tags: [] },
   ];
+  const ciBranch = "master";
   const context = { options: { branches } };
   const remoteBranches = [];
-  td.when(expand(repositoryUrl, context, branches)).thenResolve(remoteBranches);
+  td.when(expand(repositoryUrl, { ciBranch, ...context }, branches)).thenResolve(remoteBranches);
   td.when(getTags(context, remoteBranches)).thenResolve(branches);
 
   const errors = [...(await t.throwsAsync(getBranches(repositoryUrl, "master", context))).errors];
