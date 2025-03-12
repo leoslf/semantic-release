@@ -24,7 +24,6 @@ jobs:
           cache: npm
           node-version: lts/*
           registry-url: ${{ vars.NPM_REGISTRY }}
-          always-auth: true
 
       - run: npm clean-install
       - run: npm install --global corepack@latest
